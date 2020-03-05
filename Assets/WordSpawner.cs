@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using DefaultNamespace;
 using UnityEngine;
 using UnityEngine.PlayerLoop;
 
@@ -7,149 +8,94 @@ public class WordSpawner : MonoBehaviour
 {
     public GameObject word;
     private static float startTime;
-   // private TextMesh tm;
-    private List<string> wordsHistory = new List<string>();
-    private int position;
+    private TextMesh tm;
+    private List<GameObject> wordsHistory = new List<GameObject>();
+    private GameObject curretWord;
     private bool gameOver;
-    private string curretWord;
     private bool isWordSet;
     
-    private List<GameObject> _gameObjects = new List<GameObject>();
+    private string GUImessage;
     
     // Start is called before the first frame update
     void Start()
     {
-        //TEMPORRALY 
-        var word1 = CreateWord();
-        var word2 = CreateWord();
-        var word3 = CreateWord();
-        var word4 = CreateWord();
-        _gameObjects.Add(word1);
-        _gameObjects.Add(word2);
-        _gameObjects.Add(word3);
-        _gameObjects.Add(word4);
-        
+        CreateWord();
         startTime = Time.time;
     }
 
     // Update is called once per frame
     void Update()
     {
-        //SpamWord();
+        SpamWord();
+        
         var input = GetInput();
             
-        if (input != null)
+        if (input != null && !gameOver)
         { 
             if (!isWordSet)
             {
                 GetWordFromList(input, wordsHistory);
             }
-            CheckWord(input, curretWord);
+            CheckInput(curretWord,input);
         }
-    }
-
-    //this is used to destroy specific object 
-    private GameObject GetGameObjectByName(string name)
-    {
-        foreach (var i in _gameObjects)
-        {
-            var tm = i.GetComponent<TextMesh>();
-            
-            if (tm.text == name)
-            {
-                Debug.Log("GetGameObject is returning object at position :" + i.transform.position);
-                return i;
-            }
-        }
-
-        Debug.Log("NO OBJECT BY NAME FOUND");
-        return null;
     }
     
 
-    private void SetWord(string givenWord)
+    private void SetWord(GameObject givenWord)
     {
         if (!isWordSet)
         {
             curretWord = givenWord;
             isWordSet = true;
-            Debug.Log("Set word: " + curretWord);
+            
+            tm = curretWord.GetComponent<TextMesh>();
+            Debug.Log("Set word: " + tm.text);
         }
     }
 
-    private void CheckWord(string input, string givenWord)
+    private void CheckInput(GameObject givenWord, string input)
     {
-        // if (wordsHistory.Count > 0)
-        // {
-            if (givenWord != null)
-            {
-                 CheckInput(givenWord,input);
-            }
-            else
-            {
-                Debug.Log("CheckWord : Given word is null");
-            }
-        // }
-    }
+        if (givenWord == null) { return; }
+        
+        tm = givenWord.GetComponent<TextMesh>();
 
-    private void CheckInput(string givenWord, string input)
-    {
-        //check if position isn't bigger than word 
-        var isCorrect = CheckInputAtPosition(input, givenWord, position);
+        var isCorrect = CheckInputAtPosition(input, tm.text);
                 
         if (isCorrect)
         {
-            Debug.Log("input: " + input + " was correct");
-            IncreasePosition(givenWord);
-
-            //RemoveLetter(GetGameObjectByName(givenWord));
+            if (tm.text.Length == 1)
+            {
+                wordsHistory.Remove(curretWord);
+                isWordSet = false;
+                Destroy(curretWord);
+            }
+            
+            RemoveLetter(curretWord);
         }
         else
         {
-            position = 0;
-            Debug.Log("input: " + input + " wasn't correct = GAME OVER" );
-            gameOver = true;
+            GameOver(GameMessages.wrongInput);
         }
     }
 
-    private void IncreasePosition(string givenWord)
+    private void GetWordFromList(string character, List<GameObject> wordObjects)
     {
-        position++;
-        
-         if (position == givenWord.Length)
-         {
-             position = 0;
-             wordsHistory.Remove(givenWord);
-             isWordSet = false;
-             Debug.Log("WORD DONE");
-
-             var objectToDestroy = GetGameObjectByName(curretWord);
-             _gameObjects.Remove(objectToDestroy);
-             Destroy(objectToDestroy);
-         }
-    }
-    
-    private void GetWordFromList(string character, List<string> strings)
-    {
-        foreach (var valueToCheck in strings)
+        foreach (var wordToCheck in wordObjects)
         {
-            if (valueToCheck.StartsWith(character))
+            tm = wordToCheck.GetComponent<TextMesh>();
+            if (tm.text.StartsWith(character))
             {
-                SetWord(valueToCheck);
+                SetWord(wordToCheck);
                 break;
             }
-            
-            Debug.Log("NO MATCHES");
-            gameOver = true;
+            GameOver(GameMessages.noWordMatch);
         }
     }
 
     private void RemoveLetter(GameObject gameObject)
-    {
-       var textMesh = gameObject.GetComponent<TextMesh>();
-       textMesh.text =  textMesh.text.Remove(0, 1);
-       //curretWord.Remove(0, 1);
-
+    { 
+        tm = gameObject.GetComponent<TextMesh>();
+        tm.text =  tm.text.Remove(0, 1);
     }
     
     private string GetInput()
@@ -160,8 +106,14 @@ public class WordSpawner : MonoBehaviour
         {
             return input;
         }
-
         return null;
+    }
+    
+    private void GameOver(string message)
+    {
+        GUImessage = message;
+        gameOver = true;
+        Destroy(curretWord);
     }
 
     void SpamWord()
@@ -172,26 +124,27 @@ public class WordSpawner : MonoBehaviour
             var newWord = CreateWord();
             startTime = currentTime;
             
-            Destroy(newWord, 10f); //destroy after 10s -- maybe too much 
+            Destroy(newWord, 10f); 
+            //if destroyed == game over 
+            //ASK JACOB
         }
     }
 
-    private bool CheckInputAtPosition(string input, string givenWord, int position)
+    private bool CheckInputAtPosition(string input, string givenWord)
     {
-        return input == givenWord[position].ToString();
+        return input == givenWord[0].ToString();
     }
     
-
     private GameObject CreateWord()
     {
         GameObject newWord = Instantiate(word);
         GetRandomPosition(newWord);
         
-        var tm = newWord.GetComponent<TextMesh>();
+        tm = newWord.GetComponent<TextMesh>();
         var text = GetRandomString(Random.Range(5,9));
         tm.text = text;
         
-        wordsHistory.Add(text);
+        wordsHistory.Add(newWord);
         Debug.Log(text + " added to history");
         
         return newWord;
@@ -210,6 +163,11 @@ public class WordSpawner : MonoBehaviour
         
         return new string(Enumerable.Repeat(chars, length)
             .Select(s => s[Random.Range(0,s.Length)]).ToArray());
+    }
+    
+    private void OnGUI()
+    {
+        GUI.Label(new Rect(0,0,300,100), GUImessage);
     }
     
 }

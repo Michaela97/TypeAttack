@@ -6,6 +6,7 @@
     <e p="C:\Users\micha\Documents\VIA\6.semester\GMD\TypeAttack" t="IncludeRecursive">
       <e p="Assembly-CSharp.csproj" t="IncludeRecursive" />
       <e p="Assets" t="Include">
+        <e p="GameMessages.cs" t="Include" />
         <e p="WordSpawner.cs" t="Include" />
       </e>
       <e p="obj" t="ExcludeRecursive" />

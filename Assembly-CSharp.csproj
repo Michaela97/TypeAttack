@@ -58,6 +58,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+     <Compile Include="Assets\GameMessages.cs" />
      <Compile Include="Assets\WordSpawner.cs" />
  <Reference Include="Unity.Timeline.Editor">
  <HintPath>C:/Users/micha/Documents/VIA/6.semester/GMD/TypeAttack/Library/ScriptAssemblies/Unity.Timeline.Editor.dll</HintPath>
