@@ -69,7 +69,6 @@ public class WordSpawner : MonoBehaviour
                 isWordSet = false;
                 Destroy(curretWord);
             }
-            
             RemoveLetter(curretWord);
         }
         else
@@ -86,10 +85,10 @@ public class WordSpawner : MonoBehaviour
             if (tm.text.StartsWith(character))
             {
                 SetWord(wordToCheck);
-                break;
+                return;
             }
-            GameOver(GameMessages.noWordMatch);
         }
+        GameOver(GameMessages.noWordMatch);
     }
 
     private void RemoveLetter(GameObject gameObject)
@@ -113,7 +112,10 @@ public class WordSpawner : MonoBehaviour
     {
         GUImessage = message;
         gameOver = true;
-        Destroy(curretWord);
+        foreach (var wordObject in wordsHistory)
+        {
+            Destroy(wordObject);
+        }
     }
 
     void SpamWord()
